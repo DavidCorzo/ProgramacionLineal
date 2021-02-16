@@ -1,0 +1,15 @@
+# coeficientes de la función objectivo FO
+# pido si estoy maximizando o minimizando
+# Cantidad de restricciones.
+# Coheficientes de restricciones. Matriz de r*c
+# Determinar cantidad de puntos de interés: r*c-#ceros+Comb(#restriccioes, 2)
+# determinar cuales del inciso 5 cumplen todas las restricciones.
+# verificar el valor de cada candidato en la funcion objetivo.
+# De los valores funcionales, quedarme con el máximo o mínimo según sea el case.
+
+coeficientes_de_fo: []
+max: false
+restricciones_q: 0
+coheficientes_de_restricciones: 0
+
+

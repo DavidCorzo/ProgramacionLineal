@@ -2,8 +2,7 @@ from simple_table import SimplexTable
 from const import SLACK_KEY, C_J_KEY, SYMBOL
 from typing import Container
 
-
-PRINT_ALL = False
+PRINT_ALL = True
 
 
 
@@ -57,6 +56,7 @@ def include_slack_vars(f_o:dict, constraints:list) -> None:
         for ii in range(n):
             id_matrix[i][f"s{ii}"] = 0
         id_matrix[i][f"s{i}"] = 1
+
     # Example:
     # [
     #   {'x1': 2, 'x2':1, 's': '<=', 'c': 18} + {'s0': 1, 's1': 0, 's2': 0}
@@ -71,10 +71,10 @@ def include_slack_vars(f_o:dict, constraints:list) -> None:
     for i in id_matrix[0].keys():
         f_o[SLACK_KEY].update({i:0})
     
-    if PRINT_ALL:
-        for i in constraints:
-            print(i)
-        print(f_o)
+    # if PRINT_ALL:
+    #     for i in constraints:
+    #         print(i)
+    #     print(f_o)
 
 
 def make_the_initial_simplex_table(simplex_matrix: SimplexTable) -> None:
@@ -82,22 +82,22 @@ def make_the_initial_simplex_table(simplex_matrix: SimplexTable) -> None:
     pass
 
 def main() -> None:
-    f_o = {C_J_KEY: {'A': 3, 'B': 2}}
+    f_o = {C_J_KEY: {'A': 1, 'B': 2}}
     constraints = [
-        {'A':  1, 'B': 1, SYMBOL: '>=', 'c':  4},
-        {'A':  3, 'B': 4, SYMBOL: '<=', 'c': 24},
-        {'A':  1, 'B': 0, SYMBOL: '>=', 'c':  2},
-        {'A':  1, 'B':-1, SYMBOL: '<=', 'c':  0},
+        {'A':  1, 'B': 4, SYMBOL: '<=', 'c':  21},
+        {'A':  2, 'B': 1, SYMBOL: '>=', 'c': 7},
+        {'A':  3, 'B': 1.5, SYMBOL: '<=', 'c':  21},
+        {'A':  -2, 'B':6, SYMBOL: '>=', 'c':  0},
         # A + B >= 4    | (-1)A - (1)B + (1)S0 + (0)S1 + (0)S2 + (0)S3 = -4
         # 3A + 4B <= 24 | (03)A + (4)B + (0)S0 + (1)S1 + (0)S2 + (0)S3 = 24
         # A >= 2        | (-1)A + (0)B + (0)S0 + (0)S1 + (1)S2 + (0)S3 = -2
-        # A - B <= 0    | (01)A - (0)B + (0)S0 + (0)S1 + (0)S2 + (1)S3 =  0
+        # A - B <= 0    | (01)A - (0)B + (0)S0 + (0)S1 + (0)S2 + 4(1)S3 =  0
     ]
     # usual constraints: y, x >= 0
-    write_in_standard_form(constraints)
-    include_slack_vars(f_o, constraints)
-    simplex_matrix = SimplexTable(constraints, f_o)
-    make_the_initial_simplex_table(simplex_matrix)
+    # write_in_standard_form(constraints)
+    # include_slack_vars(f_o, constraints)
+    # simplex_matrix = SimplexTable(constraints, f_o)
+    # make_the_initial_simplex_table(simplex_matrix)
 
 if __name__ == '__main__':
     main()

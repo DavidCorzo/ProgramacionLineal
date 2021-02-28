@@ -1,3 +1,5 @@
+from simplextable import SimplexTable
+
 def Inequalities(f_o:dict,constraints:list):
     """
     <summary>
@@ -32,8 +34,11 @@ def Setcolumnsandrows(f_o:dict,constraints:list) -> list:
                 pass
             else:
                 columns.append(k)
-    
     return columns,rows
+
+# def Table(columns,rows,constraints):
+#     table={}
+
 
 Max = True
 
@@ -50,10 +55,15 @@ def main():
         # A - B <= 0    | (01)A - (0)B + (0)S0 + (0)S1 + (0)S2 + 4(1)S3 =  0
     ]
     Inequalities(f_o,constraints)
-    rows,columns = Setcolumnsandrows(f_o,constraints)
-    print (rows)     
-    # print(f_o)
-    # print(constraints)
+    print(f_o)
+    print(constraints)
+    columnhead,rowhead = Setcolumnsandrows(f_o,constraints)
+    print ("COLUMNAS"+str(columnhead))     
+    print ("ROWS"+str(rowhead))  
+    table = SimplexTable(columnhead,rowhead)
+    table.PrintTable()
+      
+    
 
 if __name__ == '__main__':
     main()

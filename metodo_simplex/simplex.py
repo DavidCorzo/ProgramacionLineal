@@ -1,43 +1,220 @@
-from simple_table import SimplexTable
-from const import SLACK_KEY, C_J_KEY, SYMBOL
-from typing import Container
-from inequality import inequality
-from equation import equation
 
-PRINT_ALL = True
 
-def standard_form(f_o:equation, constraints:list):
-    i = 0
-    for _ in constraints:
-        constraints[i] = equation().turn_inequality_to_equality( constraints[i], len(constraints), i )
-        i += 1
-    f_o.everything_to_lhs()
+def pass_everything_in_f_o_to_left(f_o:dict) -> None:
+    for k,v in f_o.items():
+        if ((k != 'symbol') and (k != 'z')):
+            f_o[k] = -v
 
+def make_inequalities_equalities(constraints:list) -> None:
+    n = 1
+    index = 0
+    for i in constraints:
+        if ((i['symbol'] == '<=') or (i['symbol'] == '<') or (i['symbol'] == '=<')):
+            constraints[index].update( {f's{str(n)}': 1} )
+        elif ( (i['symbol'] == '>=') or (i['symbol'] == '>') or (i['symbol'] == '=>') ):
+            constraints[index].update( {f'e{str(n)}': -1} )
+        else: print("We dont know")
+        constraints[index]['symbol'] = '='
+        index += 1
+        n += 1
+
+def make_initial_simplex_table(f_o:dict, constraints:list) -> list:
+    f_o['VB'] = 0
+    n = 1
+    index = 0
+    for i in constraints:
+        if (i.get(f"s{n}") != None):
+            constraints[index]['VB'] = constraints[index][f"s{n}"]*constraints[index]['c']
+        elif ( i.get(f"e{n}") != None ):
+            constraints[index]['VB'] = constraints[index][f"e{n}"]*constraints[index]['c']
+        index += 1
+        n += 1    
+        
+    simplex_table = [f_o] + constraints
+    s = set()
+    for i in simplex_table:
+        for ii in i.keys():
+            s.add(ii)
+    for i in simplex_table:
+        for ii in s:
+            if i.get(ii) == None:
+                i[ii] = 0
+    for i in simplex_table:
+        i['pivot'] = 0
+    for i in range(len(simplex_table)):
+        simplex_table[i]['index'] = i
+    return simplex_table
+
+def is_part_of_equation(k:str):
+    return ((k != 'symbol') and (k != 'z') and (k != 'VB') and (k != 'c') and (k != 'pivot') and (k != 'index'))
+
+def find_minimum_coeficient_of_f_o(f_o:dict) -> int:
+    m = {}
+    for k,v in f_o.items():
+        if ( is_part_of_equation(k) ):
+            m.update( {k:v} )
+    return min(m, key=lambda k: m[k])
+
+def optimum_reached(f_o:dict) -> bool:
+    opt = list()
+    for k,v in f_o.items():
+        if ( (k != 'pivot') and (k != 'index') and (k != 'symbol') ):
+            opt.append(v)
+
+    if ( 0 <= min(opt) ):
+        return True
+    return False
+
+def mult_row(row, coef) -> dict:
+    for k,v in row.items():
+        if ( (k != 'symbol') and (k != 'index') and (k != 'pivot') ):
+            row[k] *= coef
+    return row
+
+def div_row(row, coef) -> dict:
+    for k,v in row.items():
+        if ( (k != 'symbol') and (k != 'index') and (k != 'pivot') ):
+            row[k] /= coef
+    return row
+
+def make_zero_except_selected(selected, affected, smallest_coef_column_name):
+    # selected es la fila que está en uno, affected es lo que queremos hacer cero.
+    # row = mult_row(selected, -affected[smallest_coef_column_name])
+    # print("selected: ", selected)
+    # print("affected: ", affected)
+    selected = mult_row(selected, -affected[smallest_coef_column_name])
+    # print(selected[smallest_coef_column_name], affected[smallest_coef_column_name])
+    for k,v in selected.items():
+        if ( (k != 'symbol') and (k != 'VB') and (k != 'index') and (k != 'pivot') ):
+            affected[k] += selected[k]
+    return affected
+
+def iteration(simplex_table):
+    smallest_coef_column_name = find_minimum_coeficient_of_f_o(simplex_table[0])
+
+    for i in simplex_table:
+        val = i['c'] / i[smallest_coef_column_name]
+        # print(i['c'],'/', i[smallest_coef_column_name])
+        i['pivot'] = val
+
+    selected_index = min([i for i in simplex_table[1:] if i['pivot'] > 0 and i['c'] > 0], key=lambda k: k['pivot'])
+    selected_index = selected_index['index']
+
+    print(f"({smallest_coef_column_name}, {selected_index})")
+    
+    # make the rows selected column name 1
+    num = simplex_table[selected_index][smallest_coef_column_name]
+    simplex_table[selected_index] =  div_row(simplex_table[selected_index], num)
+    selected_row = {k:v for k,v in simplex_table[selected_index].items()}
+    
+    j = 0
+    for i in simplex_table:
+        if ( j != selected_index ):
+            simplex_table[j] = make_zero_except_selected(selected_row.copy(), simplex_table[j], smallest_coef_column_name)
+        j += 1
+    
+    for i in simplex_table:
+        i['VB'] = abs(i['c'])
+
+    pretty_print(simplex_table)
+    return simplex_table
+
+# def iteration_one(simplex_table:list):
+#     pass
+#     smallest_coef_column_name = find_minimum_coeficient_of_f_o(simplex_table[0])
+
+#     for i in simplex_table[1:]:
+#         val = i['c'] / i[smallest_coef_column_name]
+#         # if val > 0:
+#         #     i['pivot'] = val
+#         i['pivot'] = val
+
+#     index = min([i for i in simplex_table[1:] if i['pivot'] > 0], key=lambda k: k['pivot'])
+#     index = index['index']
+#     # print(index)
+
+#     # Divide the selected column by the pivot. f1 = f1/smallest_coef_column_number
+#     smallest_coef_column_number = simplex_table[index][smallest_coef_column_name]
+#     for k,v in simplex_table[index].items():
+#         if ( (k != 'symbol') and (k != 'VB') and (k != 'index') and (k != 'pivot') ):
+#             simplex_table[index][k] = simplex_table[index][k] / smallest_coef_column_number
+        
+    
+#     selected_row = {k:v for k,v in simplex_table[index].items()} # B
+    # j = 0
+    # for i in simplex_table:
+    #     if ( j != index ):
+    #         simplex_table[j] = make_zero_except_selected(selected_row.copy(), simplex_table[j], smallest_coef_column_name)
+    #     j += 1
+#     # for i in simplex_table:
+#     #     print(i)
+#     pretty_print(simplex_table)
+#     return simplex_table
+
+
+# def iteration(simplex_table:list):
+#     for i in range(len(simplex_table)):
+#         simplex_table[i]['index'] = i
+    
+#     smallest_coef_column_name = find_minimum_coeficient_of_f_o(simplex_table[0])
+
+#     for i in simplex_table:
+#         val = i['c'] / i[smallest_coef_column_name]
+#         i['pivot'] = val
+
+#     index = min([i for i in simplex_table[1:] if i['pivot'] > 0], key=lambda k: k['pivot'])
+#     index = index['index']
+#     # print(index)
+
+#     # Divide the selected column by the pivot. f1 = f1/smallest_coef_column_number
+#     smallest_coef_column_number = simplex_table[index][smallest_coef_column_name]
+#     for k,v in simplex_table[index].items():
+#         if ( (k != 'symbol') and (k != 'VB') and (k != 'index') and (k != 'pivot') ):
+#             simplex_table[index][k] = simplex_table[index][k] / smallest_coef_column_number
+        
+    
+#     selected_row = {k:v for k,v in simplex_table[index].items()} # B
+#     j = 0
+#     for i in simplex_table:
+#         if ( j != index ):
+#             simplex_table[j] = make_zero_except_selected(selected_row.copy(), simplex_table[j], smallest_coef_column_name)
+#         j += 1
+#     # for i in simplex_table:
+#     #     print(i)
+#     pretty_print(simplex_table)
+
+def pretty_print(simplex_table) -> None:
+    header = [x for x in simplex_table[0].keys()]
+    print("-"*100)
+    for i in header:
+        print(f"|{str(i).center(10, ' ')}", end="")
+    print("|")
+    for i in range(len(simplex_table)):
+        for ii in header:
+            if (isinstance(simplex_table[i][ii], float)):
+                print(f"|{str(simplex_table[i][ii])[:8].center(10, ' ')}", end="")
+            else:
+                print(f"|{str(simplex_table[i][ii]).center(10, ' ')}", end="")
+        print("|")
+    print("-"*100)
 
 
 def main() -> None:
-    f_o = equation().left_hand_side( {'z': 1} ).right_hand_side( {'A':1, 'B':2} )
+    f_o = {'z':1, 'symbol': '=', 'A':1,'B':2, 'c': 0}
     constraints = [
-        inequality().left_hand_side( {'A': 1, 'B': 4} ).inequality_symbol( "<=" ).right_hand_side( {'const':  21} ),
-        inequality().left_hand_side( {'A': 2, 'B': 1} ).inequality_symbol( ">=" ).right_hand_side( {'const': 7} ),
-        inequality().left_hand_side( {'A': 3, 'B': 1.5} ).inequality_symbol( "<=" ).right_hand_side( {'const':  21} ),
-        inequality().left_hand_side( {'A': -2, 'B': 6} ).inequality_symbol( ">=" ).right_hand_side( {'const':  0} ),
+        {'A':  1,   'B': 4  , 'symbol': '<=', 'c': 21},
+        {'A':  2,   'B': 1  , 'symbol': '>=', 'c': 7},
+        {'A':  3,   'B': 1.5, 'symbol': '<=', 'c': 21},
+        {'A':  -2,  'B': 6  , 'symbol': '>=', 'c': 0},
     ]
-    # usual constraints: y, x >= 0
-    standard_form(f_o, constraints)
-    simplex_table = SimplexTable(constraints, f_o)
+
+    pass_everything_in_f_o_to_left(f_o)
+    make_inequalities_equalities(constraints)
+    simplex_table = make_initial_simplex_table(f_o, constraints)
+    while not optimum_reached(simplex_table[0]):
+        simplex_table = iteration(simplex_table)
 
     
-        
-        
-        
-    while (True):
-        break
-        # if (simplex_matrix.has_been_optimized()):
-        #     break
-        # else:
-        #     pass
-
+    
 if __name__ == '__main__':
     main()
-

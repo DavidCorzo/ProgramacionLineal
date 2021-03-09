@@ -8,6 +8,7 @@ class equation:
         self.rhs:dict = None
         self.lhs_slack_vars:dict = None
         self.symbol:str = '='
+        self.matrix = []
 
     def left_hand_side(self, lhs:dict):
         self.lhs = lhs
@@ -16,7 +17,7 @@ class equation:
         self.rhs = rhs 
         return self
     
-    def is_in_standard_form(self):
+    def is_in_standard_form(self) -> bool:
         items = list(self.lhs.items())
         if ( ( len(items) == 1) and ( items[0] == CONST ) ):
             return True
@@ -38,6 +39,14 @@ class equation:
             vars += [x for x in self.lhs_slack_vars.keys()]
         vars += [x for x in self.rhs.keys()]
         return vars
+    
+    def get_everything(self) -> dict:
+        d = {}
+        d.update(self.get_lhs())
+        if (self.lhs_slack_vars != None): 
+            if (sum(self.lhs_slack_vars.values()) == -1): self.rhs[CONST] = -self.rhs[CONST]
+        d.update(self.get_rhs())
+        return d
         
     def turn_inequality_to_equality(self, inequality_wo_s:inequality, num_of_constraints:int, n:int):
         """
@@ -52,7 +61,7 @@ class equation:
         for i in range(num_of_constraints):
             if ( i == n ):
                 if ( (inequality_wo_s.symbol == '>=') or (inequality_wo_s.symbol == '>') or (inequality_wo_s.symbol == '=>') ):
-                    self.lhs_slack_vars[f"e{i}"] = -1
+                    self.lhs_slack_vars[f"s{i}"] = -1
                 else:
                     self.lhs_slack_vars[f"s{i}"] = 1
             else: self.lhs_slack_vars[f"s{i}"] = 0

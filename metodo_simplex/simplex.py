@@ -9,11 +9,12 @@ def make_inequalities_equalities(constraints:list) -> None:
     n = 1
     index = 0
     for i in constraints:
-        if ((i['symbol'] == '<=') or (i['symbol'] == '<') or (i['symbol'] == '=<')):
+        if ( i['symbol'] == '=' ):
+            continue
+        elif ((i['symbol'] == '<=') or (i['symbol'] == '<') or (i['symbol'] == '=<')):
             constraints[index].update( {f's{str(n)}': 1} )
         elif ( (i['symbol'] == '>=') or (i['symbol'] == '>') or (i['symbol'] == '=>') ):
             constraints[index].update( {f'e{str(n)}': -1} )
-        else: print("We dont know")
         constraints[index]['symbol'] = '='
         index += 1
         n += 1
@@ -93,7 +94,8 @@ def iteration(simplex_table):
     smallest_coef_column_name = find_minimum_coeficient_of_f_o(simplex_table[0])
 
     for i in simplex_table:
-        val = i['c'] / i[smallest_coef_column_name]
+        try: val = i['c'] / i[smallest_coef_column_name]
+        except: val = 0
         # print(i['c'],'/', i[smallest_coef_column_name])
         i['pivot'] = val
 
@@ -200,12 +202,13 @@ def pretty_print(simplex_table) -> None:
 
 
 def main() -> None:
-    f_o = {'z':1, 'symbol': '=', 'A':1,'B':2, 'c': 0}
+    f_o = {'z':1, 'symbol': '=', 'X1':30, 'X2':35, 'X3':20, 'X4':30, 'X5': 40, 'c': 0}
     constraints = [
-        {'A':  1,   'B': 4  , 'symbol': '<=', 'c': 21},
-        {'A':  2,   'B': 1  , 'symbol': '>=', 'c': 7},
-        {'A':  3,   'B': 1.5, 'symbol': '<=', 'c': 21},
-        {'A':  -2,  'B': 6  , 'symbol': '>=', 'c': 0},
+        {'X1': 1, 'X2': 1, 'X3': 0, 'X4': 0, 'X5': 0, 'symbol': '=', 'c': 100},
+        {'X1': 0, 'X2': 0, 'X3': 1, 'X4': 1, 'X5': 1, 'symbol': '=', 'c': 120},
+        {'X1': 1, 'X2': 0, 'X3': 1, 'X4': 0, 'X5': 0, 'symbol': '<', 'c': 130},
+        {'X1': 0, 'X2': 1, 'X3': 0, 'X4': 1, 'X5': 0, 'symbol': '<', 'c':  60},
+        {'X1': 0, 'X2': 0, 'X3': 0, 'X4': 0, 'X5': 1, 'symbol': '<', 'c': 50},
     ]
 
     pass_everything_in_f_o_to_left(f_o)

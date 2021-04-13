@@ -222,10 +222,13 @@ def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o
     for k,v in simplex_table.items():
         for i in range(len(constraints)):
             simplex_table[k].append(constraints[i][k])
-    print(dict(simplex_table))
     
-
+    # Adding pivot column and VB column.
+    simplex_table.update( {'pivot': [0 for x in range(len(simplex_table['z']))] } )
+    simplex_table.update( {'VB': [0 for x in range(len(simplex_table['z']))] } )
     
+    # Adding an index.
+    simplex_table.update( {'index': [x for x in range(len(simplex_table['z']))] } )
     
     return simplex_table
 

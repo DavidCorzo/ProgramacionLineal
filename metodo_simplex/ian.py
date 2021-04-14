@@ -441,3 +441,6 @@ while iteration == True:
     iteration = checkIteration()
 
 print("\nOptimal Solution Dual: ", tab_matrix[0][-1])
+
+
+# igualdades en simplex, que putas M, por que no row 1, como se sabe solucion optima

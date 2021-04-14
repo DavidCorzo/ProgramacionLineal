@@ -157,7 +157,7 @@ def is_slack_excess_variable(string):
 def is_artifitial_variable(string):
     return (string[0] == 'a')
 
-def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o:dict):
+def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o:dict, big_m):
     """ 
     <summary>
 
@@ -229,6 +229,16 @@ def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o
     
     # Adding an index.
     simplex_table.update( {'index': [x for x in range(len(simplex_table['z']))] } )
+
+    # {'X1': [-2, 0.5, 1, 1], 'X2': [-3, 0.25, 3, 1], 's1': [0, 1, 0, 0], 'e2': [0, 0, -1, 0], 'a2': [-10000, 0, 1, 0], 'a3': [-10000, 0, 0, 1], 'z': [1, 0, 0, 0], 'c': [0, 4, 20, 10], 'pivot': [0, 0, 0, 0], 'VB': [0, 0, 0, 0], 'index': [0, 1, 2, 3]}
+
+    # Multiply by M.
+    for k,v in simplex_table.items():
+        for i in range(1, len(v[1:])):
+            simplex_table[k][i] *= big_m
+
+
+    print(dict(simplex_table))
     
     return simplex_table
 
@@ -394,7 +404,7 @@ def main() :
 
     make_inequalities_equalities(constraints=constraints, f_o=f_o, max=m1, big_m=big_m)
     pass_everything_in_f_o_to_left(f_o)
-    simplex_table = make_initial_simplex_table(simplex_table, constraints, f_o)
+    simplex_table = make_initial_simplex_table(simplex_table, constraints, f_o, big_m)
     # for i in simplex_table:
     #     print(i)
     exit()

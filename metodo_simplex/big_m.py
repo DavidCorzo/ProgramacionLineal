@@ -64,7 +64,7 @@ def is_part_of_equation(k:str):
         Revisa si k es parte de interés para no dividir tipos incompatibles por numeros, cosas como char/num...
     </summary>
     """
-    return ((k != 'symbol') and (k != 'z') and (k != 'VB') and (k != 'c') and (k != 'pivot') and (k != 'index'))
+    return (k not in ('symbol', 'z', 'VB', 'c', 'pivot', 'index')) and (k[0] not in ('s', 'e'))
 
 
 
@@ -90,9 +90,7 @@ def optimum_reached(f_o:dict, m:bool) -> bool:
     """
     opt = list()
     for k,v in f_o.items():
-        # if ( (k != 'pivot') and (k != 'index') and (k != 'symbol') ):
-        #     opt.append(v)
-        if ( (k[0] == 'a') ):
+        if ( k not in ('pivot', 'index', 'symbol', 'c', 'VB') ):
             opt.append(v)
     if (m):
         if ( 0 <= min(opt) ):
@@ -113,7 +111,7 @@ def mult_row(row, coef) -> dict:
     """
     for k,v in row.items():
         if ( (k != 'symbol') and (k != 'index') and (k != 'pivot') ):
-            row[k][0] *= coef
+            row[k] *= coef
     return row
 
 
@@ -222,25 +220,63 @@ def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o
     for k,v in simplex_table.items():
         for i in range(len(constraints)):
             simplex_table[k].append(constraints[i][k])
-    
-    # Adding pivot column and VB column.
-    simplex_table.update( {'pivot': [0 for x in range(len(simplex_table['z']))] } )
-    simplex_table.update( {'VB': [0 for x in range(len(simplex_table['z']))] } )
-    
-    # Adding an index.
-    simplex_table.update( {'index': [x for x in range(len(simplex_table['z']))] } )
 
     # {'X1': [-2, 0.5, 1, 1], 'X2': [-3, 0.25, 3, 1], 's1': [0, 1, 0, 0], 'e2': [0, 0, -1, 0], 'a2': [-10000, 0, 1, 0], 'a3': [-10000, 0, 0, 1], 'z': [1, 0, 0, 0], 'c': [0, 4, 20, 10], 'pivot': [0, 0, 0, 0], 'VB': [0, 0, 0, 0], 'index': [0, 1, 2, 3]}
 
-    # Multiply by M.
+    # Transpose.
+    simplex_table_T = [ {} for x in range(len(simplex_table['z'])) ]
     for k,v in simplex_table.items():
-        for i in range(1, len(v[1:])):
-            simplex_table[k][i] *= big_m
-
-
-    print(dict(simplex_table))
+        for i in range(len(simplex_table_T)):
+            simplex_table_T[i].update( { k:v[i] } )
     
-    return simplex_table
+    # new_row:
+    new_row_0 = []
+    for i in simplex_table_T:
+        contributes_to_new_row = False
+        for k,v in i.items():
+            if ( (k[0] == 'a') and (v != 0) ):
+                contributes_to_new_row = True
+        if contributes_to_new_row:
+            new_row_0.append(i.copy())
+    
+    new_row = []
+    for i in new_row_0:
+        is_first_row = False
+        for k,v in i.items():
+            if ( (k == 'z') and (v == 1) ):
+                is_first_row = True
+                break
+
+        if is_first_row:
+            new_row.append(i)
+        else:
+            new_row.append(mult_row(i, big_m))
+
+    # Sum all the interesting rows.
+    new_row_0 = {k:0 for k,v in new_row[0].items()}
+    for i in new_row:
+        for k,v in i.items():
+            new_row_0[k] += v
+
+    # Make artificial letters 0.
+    for k,v in new_row_0.items():
+        if (k[0] == 'a'):
+            new_row_0[k] = 0
+    
+    # Making the new_row_0 the new zeroth row.
+    simplex_table_T[0] = new_row_0
+
+    # Adding pivot column and VB column. Adding an index.
+    index = 0
+    for i in range(len(simplex_table_T)):
+        simplex_table_T[i].update( {'pivot':0} )
+        simplex_table_T[i].update( {'VB':0} )
+        simplex_table_T[i].update( {'index': index} )
+        index += 1
+
+    for i in simplex_table_T: print(i)
+    
+    return simplex_table_T
 
 
 
@@ -252,11 +288,16 @@ def iteration(simplex_table):
     """
     smallest_coef_column_name = find_minimum_coeficient_of_f_o(simplex_table[0])
 
+    print(smallest_coef_column_name)
+
     for i in simplex_table:
         try: val = i['c'] / i[smallest_coef_column_name]
         except ZeroDivisionError: val = 0
-        # print(i['c'],'/', i[smallest_coef_column_name])
         i['pivot'] = val
+
+    # print("\n")
+    # for i in simplex_table: print(i)
+    # exit()
 
     selected_index = min([i for i in simplex_table[1:] if i['pivot'] > 0 and i['c'] > 0], key=lambda k: k['pivot'])
     selected_index = selected_index['index']
@@ -396,7 +437,6 @@ def main() :
     m1:bool = False
     big_m: int = 10_000
     # dual(f_o, constraints, m1)
-    simplex_table = OrderedDict({})
     
     with open("result.txt", mode="a+") as file:
         file.truncate(0)
@@ -404,12 +444,9 @@ def main() :
 
     make_inequalities_equalities(constraints=constraints, f_o=f_o, max=m1, big_m=big_m)
     pass_everything_in_f_o_to_left(f_o)
-    simplex_table = make_initial_simplex_table(simplex_table, constraints, f_o, big_m)
-    # for i in simplex_table:
-    #     print(i)
-    exit()
+    simplex_table = make_initial_simplex_table(OrderedDict(), constraints, f_o, big_m)
+    simplex_table = iteration(simplex_table)
     while not optimum_reached(simplex_table[0], m1):
-        simplex_table = iteration(simplex_table)
         for i in simplex_table:
             print(i)
 

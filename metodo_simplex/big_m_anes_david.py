@@ -647,30 +647,42 @@ def dual(f_o:dict, constraints:list,urs:list,m1:bool):
                 constraints.remove(constraints[i])
                 constraints.insert(i,new_constraint1)
                 constraints.insert(i,new_constraint2)
+        
         for i in range(quantity_of_new_constraints):
             key_in_constraints = f'X{i+1}' 
             constraint = {}
             for i in range(original_constraints):
+                print(i)
                 new_key = f'X{i+1}'
                 new_coeficiente = 0 
                 new_symbol = '='
-                biggerthan_constraint = 1
+                ##
+                print(str(constraints[0].items()))
                 for k,v in constraints[i].items():
+                    print("k",key_in_constraints)
+                    biggerthan_constraint = 1
                     if ( k == key_in_constraints):
                         new_coeficiente = v
-                    elif ( k == 'symbol'):  
-                        if ( v == '<=' ):
-                            new_symbol = '>='
-                            if m1 == False:
-                                biggerthan_constraint = -1
-                        elif ( v == '>=' ):
-                            new_symbol = '<='
-                            if m1 == True:
+                        print(k,v)
+                    elif ( k == 'symbol'):
+                        if m2 == False:
+                            if ( v == '>=' ):
+                                new_symbol = '>='
                                 ## si es un ">=" constraint, multiplicar por -1 el constraint entero
                                 biggerthan_constraint = -1
-                # for i in constraint:
-                #     constraint[i] = mult_row(constraint[i], -1)
-                constraint.update({new_key : (new_coeficiente * biggerthan_constraint) }) ## transversar la matriz de constraints original
+                            elif ( v == '<=' ):
+                                    new_symbol = '>='
+                        elif m2 == True:
+                            if ( v == '<=' ):
+                                new_symbol = '<='
+                                ## si es un ">=" constraint, multiplicar por -1 el constraint entero
+                                biggerthan_constraint = -1
+                            elif ( v == '>=' ):
+                                    new_symbol = '<='                     
+                    # for i in constraint:
+                    #     constraint[i] = mult_row(constraint[i], -1)
+                    constraint.update({new_key : (new_coeficiente * biggerthan_constraint) }) ## transversar la matriz de constraints original
+                    #print({new_key : (new_coeficiente * biggerthan_constraint) })
             constraint.update({'symbol' : new_symbol})
             constraint.update({'c' : ((f_o[key_in_constraints]) * biggerthan_constraint) }) ## coeficientes de xi de f_o se vuelven 'c'
             new_constraints.append(constraint)

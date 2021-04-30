@@ -668,13 +668,10 @@ def dual(f_o:dict, constraints:list,urs:list,m1:bool):
                             if m1 == True:
                                 ## si es un ">=" constraint, multiplicar por -1 el constraint entero
                                 biggerthan_constraint = -1
-                # for i in constraint:
-                #     constraint[i] = mult_row(constraint[i], -1)
                 constraint.update({new_key : (new_coeficiente * biggerthan_constraint) }) ## transversar la matriz de constraints original
             constraint.update({'symbol' : new_symbol})
             constraint.update({'c' : ((f_o[key_in_constraints]) * biggerthan_constraint) }) ## coeficientes de xi de f_o se vuelven 'c'
             new_constraints.append(constraint)
-        print("NEW CONSTRAINTS: ",new_constraints)
 
     return(new_f_o,new_constraints,new_urs,m2)
 
@@ -725,15 +722,15 @@ def main() :
     # ]
     # urs=[0, 0]
     # m1:bool = True ## m primal
-    # 4 it should not work
-    f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 3}
-    constraints = [
-        {'X1': 2  , 'X2': 4  , 'symbol': '<='    , 'c': 12 },
-        {'X1': 2  , 'X2': 2  , 'symbol': '='    , 'c': 10 },
-        {'X1': 5  , 'X2': 2  , 'symbol': '>='    , 'c': 10 }
-    ]
-    urs=[0, 0]
-    m1:bool = False ## m primal
+    # 4
+    # f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 3}
+    # constraints = [
+    #     {'X1': 2  , 'X2': 4  , 'symbol': '<='    , 'c': 12 },
+    #     {'X1': 2  , 'X2': 2  , 'symbol': '='    , 'c': 10 },
+    #     {'X1': 5  , 'X2': 2  , 'symbol': '>='    , 'c': 10 }
+    # ]
+    # urs=[0, 0]
+    # m1:bool = False ## m primal
     # # 5
     # f_o = {'z': 1, 'symbol': '=', 'X1': 2, 'X2': 3, 'X3': 0}
     # constraints = [
@@ -763,11 +760,14 @@ def main() :
     simplex_table_dual = make_initial_simplex_table(OrderedDict(), dual_constraints, dual_f_o, big_m, m2)
     while not optimum_reached(simplex_table[0], m1):
         simplex_table = iteration(simplex_table, m1)
-    print("+"*150)
     while not optimum_reached(simplex_table_dual[0], m2):
         simplex_table_dual = iteration(simplex_table_dual, m2)
 
 main()
 
 
-#
+#  ]:
+
+
+
+

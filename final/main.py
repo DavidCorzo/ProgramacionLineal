@@ -740,7 +740,7 @@ app = Flask(__name__)
 
 f_o, constraints, urs, m1 = None, None, None, None
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def inputs():
     return render_template(
             'inputs.html',

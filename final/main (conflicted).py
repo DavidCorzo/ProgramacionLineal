@@ -3,7 +3,6 @@ from flask import Flask, render_template
 from typing import OrderedDict, Tuple
 from tabulate import tabulate
 from colorama import Fore
-from operator import itemgetter
 
 # ANES MAATENS Y DAVID CORZO
 
@@ -714,7 +713,7 @@ def get_feasable_points(max_range_x:int, max_range_y:int) -> list:
 def evaluate_polinomial(c_0:float, c_1:float, i:tuple) -> float:
     return c_0 * i[0] + c_1 * i[1]
 
-def get_optimum(constraints, max_range_x, max_range_y) -> Tuple[float, Tuple[int, int]]:
+def get_optimum(constraints, max_range_x, max_range_y) -> Tuple[float, int, int]:
     interest_pts = set()
     for i in get_feasable_points(max_range_x, max_range_y):
         is_in_feasable_region = True
@@ -733,8 +732,9 @@ def get_optimum(constraints, max_range_x, max_range_y) -> Tuple[float, Tuple[int
             else: 
                 is_in_feasable_region = False
                 break
-        if (is_in_feasable_region): interest_pts.add(tuple(candidate, i))
-    return max(interest_pts, key=lambda x:x[0])
+        if (is_in_feasable_region): interest_pts.add((candidate, i))
+    i_max = interest_pts.index(max(interest_pts))
+    return (interest_pts[i_max], )
 
 app = Flask(__name__)
 

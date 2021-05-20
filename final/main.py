@@ -740,15 +740,13 @@ app = Flask(__name__)
 
 f_o, constraints, urs, m1 = None, None, None, None
 
-@app.route('/inputs', methods=['POST'])
+@app.route('/', methods=['POST'])
 def inputs():
-
-    
-
     return render_template(
             'inputs.html',
             amount_of_constraints=1
         )
+
 
 @app.route('/results')
 def results():

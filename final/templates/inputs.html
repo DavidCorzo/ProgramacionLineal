@@ -224,16 +224,19 @@
           </div>
         </div>
         <h2>RESTRICCIONES</h2>
-        <p>Cantidad de restricciones:</p>
-        <div class="quantity_constraints_manual">
-          <input type="number" name="number of constraints" style="width: 20%"/>
-        </div>
-        <div class="btn-addconstraint">
-          {% for i in  %}
-          <button type="submit" href="/">confirmar cantidad de restricciones</button>
-          {%  %}
-        </div>
+        {% for i in variables %}
+        <p>{{i}}</p>
+        <input name={{i}} placeholder="1" />
+        {% endfor %}
+        <p>SIMBOLO</p>
+        <input name="symbol" placeholder="<=" />
+        <p>CONSTANTE</p>
+        <input name="c" placeholder="1" />
+        <button type="submit" href="/">añadir restriccion</button>
         <br>
+        <div class="btn-block">
+          <button type="submit" href="/">SUBIR</button>
+        </div>
         
       </form>
     </div>

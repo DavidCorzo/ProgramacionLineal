@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<head>
+  <title>CALCULADORA PROGRAMACION LINEAL</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Share&display=swap');
+    p, h1, h2, h3 {
+    font-family: 'Share', cursive;
+  }
+  input {
+    font-family: 'Share', cursive;
+  }
+     
+  html, body {
+      min-height: 100%;
+      }
+      body, div, form, input, select, textarea, p { 
+      padding: 0;
+      margin: 0;
+      outline: none;
+      font-size: 14px;
+      color: #666;
+      line-height: 22px;
+      }
+      h1 {
+      position: absolute;
+      margin: 0;
+      font-size: 36px;
+      color: #fff;
+      z-index: 2;
+      }
+      .testbox {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: inherit;
+      padding: 20px;
+      }
+      form {
+      width: 100%;
+      padding: 20px;
+      border-radius: 6px;
+      background: rgb(252, 248, 255);
+      box-shadow: 0 0 30px 0 #4f42bf; 
+      }
+      .banner {
+      position: relative;
+      height: 150px;
+      background-image: url("https://www.mathsisfun.com/algebra/images/inequality-graph-lp.gif");  
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      }
+      .banner::after {
+      content: "";
+      background-color: rgba(37, 30, 43, 0.5); 
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      }
+      p.top-info {
+      margin: 10px 0;
+      }
+      input, select, textarea {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      }
+      input {
+      width: calc(100% - 10px);
+      padding: 5px;
+      }
+      select {
+      width: 100%;
+      padding: 7px 0;
+      background: transparent;
+      }
+      textarea {
+      width: calc(100% - 12px);
+      padding: 5px;
+      }
+      .item:hover p, .item:hover i, .question:hover p, .question label:hover, input:hover::placeholder {
+      color: #4f42bf;
+      }
+      .item input:hover, .item select:hover, .item textarea:hover {
+      border: 1px solid transparent;
+      box-shadow: 0 0 8px 0 #4f42bf;
+      color: #4f42bf;
+      }
+      .item {
+      position: relative;
+      margin: 10px 0;
+      }
+      input[type="date"]::-webkit-inner-spin-button {
+      display: none;
+      }
+      .item i, input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      font-size: 20px;
+      color: #a9a9a9;
+      }
+      .item i {
+      right: 2%;
+      top: 30px;
+      z-index: 1;
+      }
+      [type="date"]::-webkit-calendar-picker-indicator {
+      right: 1%;
+      z-index: 2;
+      opacity: 0;
+      cursor: pointer;
+      }
+      input[type=radio] {
+      width: 0;
+      visibility: hidden;
+      }
+      label.radio {
+      position: relative;
+      display: inline-block;
+      margin: 5px 20px 25px 0;
+      cursor: pointer;
+      }
+      .question span {
+      margin-left: 30px;
+      }
+      label.radio:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      border: 2px solid #4f42bf;
+      }
+      label.radio:after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 4px;
+      top: 6px;
+      left: 5px;
+      background: transparent;
+      border: 3px solid #4f42bf;
+      border-top: none;
+      border-right: none;
+      transform: rotate(-45deg);
+      opacity: 0;
+      }
+      input[type=radio]:checked + label:after {
+      opacity: 1;
+      }
+      .btn-block {
+      margin-top: 10px;
+      text-align: center;
+      }
+      button {
+      width: 150px;
+      padding: 10px;
+      border: none;
+      border-radius: 5px; 
+      background: #4f42bf;
+      font-size: 16px;
+      color: #fff;
+      cursor: pointer;
+      }
+      button:hover {
+      background: #9b34b5;
+      }
+      @media (min-width: 568px) {
+      .f_o_manual, .city-item {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      }
+      .f_o_manual input, .city-item input {
+      
+      width: calc(50% - 30%);
+      }
+      .city-item select {
+      width: calc(50% - 8px);
+      }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="testbox">
+      <form action="/">
+
+        <div class="banner">
+          <h1>CALCULADORA PROGRAMACION LINEAL</h1>
+        </div>
+        <br>
+        <h2 style="color:#4f42bf">Resultado Primal</h2>
+        <div class="question">
+          <h3>FUNCION OBJETIVA - MAX. 2 VARIABLES</h3>
+          <p>Formato: 'X1': 1, 'X2': 1</p>
+          <div class="f_o_write">
+            <input type="text" name="f_o"/>
+          </div>
+          <h3>RESTRICCIONES</h3>
+          <p>Formato: {'X1': 1, 'X2': 1, 'symbol': '<=', 'c': 3}</p>
+          <div class="constraints_write">
+            <textarea rows="4" placeholder="{'X1': 1, 'X2': 1, 'symbol': '<=', 'c': 2},
+            {'X1': 2, 'X2': 1, 'symbol': '<=', 'c': 3},
+            {'X1': 2, 'X2': 1, 'symbol': '>=', 'c': 3}"></textarea>
+          </div>
+        </div>
+        <div class="btn-block">
+          <button type="submit" href="/">SUBIR</button>
+        </div>
+
+        <!-- FORMA MANUAL -->
+        <h2 style="color:#4f42bf">MODO MANUAL</h2>
+        <div class="item">
+          <h2>FUNCION OBJETIVO</h2>
+          
+          <div class="f_o_manual">
+            <input type="text" name="X1" placeholder="X1" />
+            <input type="text" name="X1c" placeholder="1" />
+            <br>
+            <input type="text" name="X2" placeholder="X2" />
+            <input type="text" name="X2c" placeholder="1" />
+          </div>
+        </div>
+        <h2>RESTRICCIONES</h2>
+        <p>Cantidad de restricciones:</p>
+        <div class="quantity_constraints_manual">
+          <input type="number" name="number of constraints" style="width: 20%"/>
+        </div>
+        <div class="btn-addconstraint">
+          {% for i in  %}
+          <button type="submit" href="/">confirmar cantidad de restricciones</button>
+          {%  %}
+        </div>
+        <br>
+        
+      </form>
+    </div>
+  </body>

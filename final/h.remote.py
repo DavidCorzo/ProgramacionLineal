@@ -1,15 +1,11 @@
-# ANES MAATENS Y DAVID CORZO
-from logging import debug
 from flask import Flask, render_template, request
 
 from typing import OrderedDict, Tuple
 from tabulate import tabulate
 from colorama import Fore
-from ast import literal_eval
-import pandas
-# ANES MAATENS Y DAVID CORZO
+from operator import itemgetter
 
-f_o, constraints, urs, m1 = {}, [], [], True
+# ANES MAATENS Y DAVID CORZO
 
 X = 'X1'
 Y = 'X2'
@@ -671,15 +667,37 @@ def dual(f_o:dict, constraints:list,urs:list,m1:bool):
 
     return(new_f_o,new_constraints,new_urs,m2)
 
-def get_range_x_and_y(constraints:list) -> Tuple[int, int]:
+def user_enter_f_o_and_constraints(f_o:dict, constraints:list) -> Tuple[dict, list]:
     """
     <summary>
-        <args> 
-        constraints: la matriz de restricciones. 
-        </args>
-        Retorna el máximo x y y de que cumple con ser el max(x/c), max(y/c).
+        <args> None </args>
+        Esta función ingresa valores al diccionario f_o y a la lista de diccionarios de constraints.
     </summary>
     """
+    f_o.update( {'z':1, 'symbol': '='} )
+    num_of_vars: int = int(input("Enter the number of variables: "))
+    f_o.update( {f'X{x}':float(input(f"Ingrese X{x} de la funcion objetivo: ")) for x in range(1, (num_of_vars + 1))} )
+    print(f"El diccionario de la funcion objetivo es: \n{tabulate([[x for x in f_o.values()]], f_o.keys(), tablefmt='pretty')}")
+
+    print("-"*100)
+    num_of_restrictions:int = int(input("Enter the number of restrictions: "))
+    for i in range(num_of_restrictions):
+        temp = dict()
+        print(f"Restriccion #{i + 1}")
+        while (True):
+            symbol:str = input("Ingrese el simbolo de la restricción: ")
+            if (symbol in ('=', '>=', '=>', '<=', '=<', '<', '>')):
+                temp.update( {'z': 0, 'symbol': symbol } )
+                break
+            else: 
+                print(f"symbol {symbol} is not valid.")
+        temp.update( {f"X{x}":float(input(f"\tIngrese X{x} de la restricción: ")) for x in range(1, num_of_vars + 1)} )
+        temp.update( {"c": float(input("\tIngrese la constante de la restricción: "))} )
+        constraints.append( temp )
+    print(f"La matriz de restricciones ingresada: \n{tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt='pretty')}")
+    return  f_o, constraints
+
+def get_range_x_and_y(constraints:list) -> Tuple[int, int]:
     # X1 = X, X2, Y
     c_div_x, c_div_y = list(), list()
     for i in constraints:
@@ -695,6 +713,8 @@ def get_range_x_and_y(constraints:list) -> Tuple[int, int]:
     max_range_x = c_div_x
     # max_range_y = [x['c']/x[Y] for x in constraints if (x[Y] != 0)]
     max_range_y = c_div_y
+
+
 
     # axis points.
     # for i in range(len(constraints)):
@@ -719,15 +739,6 @@ def get_range_x_and_y(constraints:list) -> Tuple[int, int]:
         return (min(max_range_x), min(max_range_y))
 
 def get_feasable_points(max_range_x:int, max_range_y:int) -> list:
-    """
-    <summary>
-        <args> 
-        max_range_x: el valor máximo (o minimo) de la lista de coeficientes/c, 
-        max_range_y: el valor máximo (o minimo) de la lista de coeficientes/c
-        </args>
-        Retorna todos los puntos que cumplen con las restricciones y con los límites.
-    </summary>
-    """
     max_range_x = round(max_range_x) + 1
     max_range_y = round(max_range_y) + 1
     for x_i in range(max_range_x):
@@ -738,14 +749,6 @@ def evaluate_polinomial(c_0:float, c_1:float, i:tuple) -> float:
     return c_0 * i[0] + c_1 * i[1]
 
 def get_optimum(constraints, max_range_x, max_range_y, f_o) -> Tuple[float, Tuple[int, int]]:
-    """
-    <summary>
-        <args> 
-        constraints, max_range_x, max_range_y, f_o 
-        </args>
-        Retorna el valor optimo 
-    </summary>
-    """
     interest_pts = set()
     for i in get_feasable_points(max_range_x, max_range_y):
         is_in_feasable_region = True
@@ -753,56 +756,131 @@ def get_optimum(constraints, max_range_x, max_range_y, f_o) -> Tuple[float, Tupl
             candidate = evaluate_polinomial(constraints[j][X], constraints[j][Y], i)
             limit  = constraints[j]['c']
             simbol = constraints[j]['symbol']
-            # print(candidate, limit, simbol)
             if ( # check all viable options.
-                    ((simbol == "<=") and (candidate <= limit)) or 
-                    ((simbol == '>=') and (candidate >= limit)) or 
-                    ((simbol == '<') and (candidate < limit)) or 
-                    ((simbol == '>') and (candidate > limit)) or 
-                    ((simbol == '=') and (candidate == limit))
+                    ((simbol == "<=") and (candidate >= limit)) or 
+                    ((simbol == '>=') and (candidate <= limit)) or 
+                    ((simbol == '<') and (candidate > limit)) or 
+                    ((simbol == '>') and (candidate < limit)) or 
+                    ((simbol == '=') and (candidate != limit))
                 ):
                 continue
             else: 
                 is_in_feasable_region = False
                 break
         if (is_in_feasable_region): interest_pts.add(tuple([evaluate_polinomial(f_o[X], f_o[Y], i), i]))
+    
     return max(interest_pts, key=lambda x: x[0])
 
+f_o, constraints, urs, m1 = None, None, None, None
+
+# app = Flask(__name__)
 
 
+# @app.route('/', methods=['GET', 'POST'])
+# def mainpage():
+#     return render_template(
+#             'inputs.html',
+#             f_o = {'z':1, 'symbol':'='},
+#             constraints = []
+#         )
 
-def main():
-    """
-    <summary>
-        <args> 
-        None.
-        </args>
-        Punto de entrada al programa.
-    </summary>
-    """
-    # f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 9}
-    # constraints = [
-        # {'X1': 3,  'X2': 5, 'symbol': '<=', 'c':  60 }, {'X1': 4,  'X2': 4, 'symbol': '<=', 'c':  72 }, {'X1': 2,  'X2': 4, 'symbol': '<=', 'c':  100  }
-    # ] 108(0,12)
-    global f_o, constraints, m1, urs
-    print(f_o, constraints, m1, urs)
-    # m1:bool = True
+# @app.route('/submitw', methods=['POST'])
+# def submit_write():
+#     add_to_f_o = request.form["f_o_w"]
+#     print(add_to_f_o)
+#     return render_template(
+#             'inputs.html',
+#             f_o = {'z':1, 'symbol':'='},
+#             constraints = []
+#         )
+
+
+# @app.route('/results')
+# def results():
+#     """
+#     <summary>
+#         <args> None </args>
+#         Punto de entrada al programa.
+#         Retorna None.
+#     </summary>
+#     """
+    # urs = [0 for k,v in f_o.items() if (k[0].lower() == 'x')] 
+
+    # # print(f"{Fore.WHITE}")
+    # big_m: int = 10_000
+    # # print("PRIMAL \n MAX: "+ str(m1) + "\n F_O: " + str(f_o) + "\n Constraints: " + str(constraints) + "\n URS: " + str(urs) + "\n\n")
+    # # print(f"PRIMAL: {'maximizing' if m1 else 'minimizing'} {m1}")
+    # # print("PRIMAL FUNCION OBJETIVO")
+    # # print(tabulate([[x for x in f_o.values()]], f_o.keys(), tablefmt="pretty"))
+    # # print("PRIMAL CONSTRAINTS: ")
+    # # print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
+    # # print("URS: ", urs)
+
+    # ## funcion dual
+    # # print(f"{Fore.GREEN}")
+    # dual_f_o, dual_constraints, dual_urs, m2 = dual(f_o.copy(), constraints.copy(), urs.copy(),m1)
+    # # print("DUAL \n MAX: "+ str(m2) + "\n F_O: " + str(dual_f_o) + "\n Constraints: " + str(dual_constraints) + "\n URS: " + str(dual_urs) + "\n\n")
+    # # print(f"DUAL: {'maximizing' if m2 else 'minimizing'} {m2}")
+    # # print("DUAL FUNCION OBJETIVO")
+    # # print(tabulate([[x for x in dual_f_o.values()]], dual_f_o.keys(), tablefmt="pretty"))
+    # # print("DUAL CONSTRAINTS: ")
+    # # print(tabulate([x.values() for x in dual_constraints], [x for x in dual_constraints[0].keys()], tablefmt="pretty"))
+    # # print("URS: ", dual_urs)
+
+    # # print(f"{Fore.WHITE}PRIMAL")
+    # # print("-"*100)
+    # make_inequalities_equalities(constraints=constraints, f_o=f_o, m1=m1, big_m=big_m)
+    # pass_everything_in_f_o_to_left(f_o)
+    # simplex_table = make_initial_simplex_table(OrderedDict(), constraints, f_o, big_m, m1, urs)
+    # primal_done, primal_optimum = optimum_reached(simplex_table[0], m1)
+    # while not primal_done:
+    #     simplex_table = iteration(simplex_table, m1)
+    #     primal_done, primal_optimum = optimum_reached(simplex_table[0], m1)
+    # # print("\n")
+    # # for i in simplex_table: print(i)
+    # primal_result = tabulate([x.values() for x in simplex_table], simplex_table[0].keys(), tablefmt="pretty")
+    # # print("="*200)
+
+    # # DUAL
+    # # print(f"{Fore.GREEN}DUAL")
+    # make_inequalities_equalities(constraints=dual_constraints, f_o=dual_f_o, m1=m2, big_m=big_m)
+    # pass_everything_in_f_o_to_left(dual_f_o)
+    # simplex_table_dual = make_initial_simplex_table(OrderedDict(), dual_constraints, dual_f_o, big_m, m2, dual_urs)
+    # dual_done, dual_optimum = optimum_reached(simplex_table_dual[0], m2)
+    # while not dual_done:
+    #     simplex_table_dual = iteration(simplex_table_dual, m2)
+    #     dual_done, dual_optimum = optimum_reached(simplex_table_dual[0], m2)
+    # print("\n")
+    # # for i in simplex_table_dual: print(i)
+    # dual_result = tabulate([x.values() for x in simplex_table_dual], simplex_table_dual[0].keys(), tablefmt="pretty")
+    # # print("="*200)
+
+    # return render_template(
+    #         'results.html', 
+    #         primal_optimum=primal_optimum, primal_result=primal_result, 
+    #         dual_optimum=dual_optimum, dual_result=dual_result
+    #     )
+
+
+if __name__ == '__main__':
+    f_o = {'z': 1, 'symbol': '=', 'X1': 10, 'X2': 15}
+    constraints = [
+        {'X1': 282, 'X2': 400, 'symbol': '<=', 'c':  2000},
+        {'X1': 4,   'X2': 40 , 'symbol': '<=', 'c':  140 },
+        {'X1': 1,   'X2': 0  , 'symbol': '<=', 'c':  5   }
+    ]
+    m1:bool = True
 
     urs = [0 for k,v in f_o.items() if (k[0].lower() == 'x')] 
-
-    # integers:
-    x,y = get_range_x_and_y(constraints)
-    optimal_integer = get_optimum(constraints, x, y, f_o)
-    print(optimal_integer)
 
     # print(f"{Fore.WHITE}")
     big_m: int = 10_000
     # print("PRIMAL \n MAX: "+ str(m1) + "\n F_O: " + str(f_o) + "\n Constraints: " + str(constraints) + "\n URS: " + str(urs) + "\n\n")
     # print(f"PRIMAL: {'maximizing' if m1 else 'minimizing'} {m1}")
     # print("PRIMAL FUNCION OBJETIVO")
-    # print()
+    # print(tabulate([[x for x in f_o.values()]], f_o.keys(), tablefmt="pretty"))
     # print("PRIMAL CONSTRAINTS: ")
-    # print()
+    # print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
     # print("URS: ", urs)
 
     ## funcion dual
@@ -811,12 +889,10 @@ def main():
     # print("DUAL \n MAX: "+ str(m2) + "\n F_O: " + str(dual_f_o) + "\n Constraints: " + str(dual_constraints) + "\n URS: " + str(dual_urs) + "\n\n")
     # print(f"DUAL: {'maximizing' if m2 else 'minimizing'} {m2}")
     # print("DUAL FUNCION OBJETIVO")
-    # print()
+    # print(tabulate([[x for x in dual_f_o.values()]], dual_f_o.keys(), tablefmt="pretty"))
     # print("DUAL CONSTRAINTS: ")
-    # print()
-    # print("URS: ", )
-    primal_str = "Funcion objetivo: " + str(tabulate([[str(x).center(6) for x in f_o.values()]], [str(x).center(6) for x in f_o.keys()], tablefmt="pretty")) + "\n\nRestricciones primal: " + str(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
-    dual_str = "Funcion objetivo: " + str(tabulate([[x for x in dual_f_o.values()]], dual_f_o.keys(), tablefmt="pretty")) + "\n\nRestricciones dual: " + str(tabulate([x.values() for x in dual_constraints], [x for x in dual_constraints[0].keys()], tablefmt="pretty")) + "\n\nURS: " + str(dual_urs)
+    # print(tabulate([x.values() for x in dual_constraints], [x for x in dual_constraints[0].keys()], tablefmt="pretty"))
+    # print("URS: ", dual_urs)
 
     # print(f"{Fore.WHITE}PRIMAL")
     # print("-"*100)
@@ -830,7 +906,6 @@ def main():
     # print("\n")
     # for i in simplex_table: print(i)
     primal_result = tabulate([x.values() for x in simplex_table], simplex_table[0].keys(), tablefmt="pretty")
-    # primal_result = [simplex_table[0].keys()] + [x.values() for x in simplex_table]
     # print("="*200)
 
     # DUAL
@@ -842,143 +917,15 @@ def main():
     while not dual_done:
         simplex_table_dual = iteration(simplex_table_dual, m2)
         dual_done, dual_optimum = optimum_reached(simplex_table_dual[0], m2)
+    print("\n")
     # for i in simplex_table_dual: print(i)
     dual_result = tabulate([x.values() for x in simplex_table_dual], simplex_table_dual[0].keys(), tablefmt="pretty")
-    # dual_result = [simplex_table_dual[0].keys()] + [x.values() for x in simplex_table_dual]
-    return optimal_integer, big_m, primal_str, primal_optimum, primal_result, dual_str, dual_optimum, dual_result
-    
-app = Flask(__name__)
+    # print("="*200)
+    print(primal_result)
+    print("-"*100)
+    print(dual_result)
 
-
-@app.route('/', methods=["GET", "POST"])
-def mainpage():
-     """
-    <summary>
-        <args> 
-        None 
-        </args>
-        Retorna el html de input
-    </summary>
-    """
-     return render_template('inputs.html', f_o = {}, constraints = [])
-
-@app.route('/submit', methods=['POST', 'GET'])
-def submit():
-     """
-    <summary>
-        <args> 
-        Global variables: f_o, constraints (funcion objetivo y restricciones) 
-        </args>
-        Form de input del programa. Se puede llenar los inputs de forma ya formateada, o se puede llenar los inputs de forma 'MANUAL'
-        Dependiendo del boton que se presiona:
-        - Si se presiona el primer boton de subir, asigna la informacion escrita a las variables de f_o y constraints.
-        - Si se presiona el boton de añadir variables (MANUAL), Retorna el mismo html para que añada restricciones.
-    </summary>
-    """
-     global variables, constraints, f_o
-     if request.method == 'POST':
-        ##variable only used to ask for constraints in manual version
-        if request.form['submit_button'] == 'write':
-            variables=[]
-            add_to_f_o = literal_eval('{' + request.form["f_o_w"] + '}')
-            add_to_f_o.update( {'z':1, 'symbol':'='} )
-            # print(str(add_to_f_o))
-            add_to_constraints = request.form['constraints_w'].split('},')
-            for i in range(len(add_to_constraints)):
-                if (add_to_constraints[i][-1] == '}'): continue
-                else: add_to_constraints[i] = add_to_constraints[i] + '}'
-            add_to_constraints = [literal_eval(x.strip()) for x in add_to_constraints]
-        
-        elif request.form['submit_button'] == 'add_variables_m':
-            variables=[]
-            add_to_constraints = []
-            variable1 = request.form['X1_name']
-            c_variable1 = request.form['X1coeficiente']
-            variable2 = request.form['X2_name']
-            c_variable2 = request.form['X2coeficiente']
-            add_to_f_o = {'z':1, 'symbol':'=', 'X1':float(c_variable1), 'X2': float(c_variable2)}
-            variables = [variable1,variable2]
-        constraints = add_to_constraints.copy()
-        f_o = add_to_f_o.copy()
-        return render_template(
-                'inputs.html',
-                f_o = add_to_f_o,
-                constraints = add_to_constraints,
-                variables = variables
-            )
-    
-    # if request.form['submit_button'] == 'manual':
-    #     print('manual')
-     return render_template(
-            'inputs.html',
-            f_o = {'z':1, 'symbol':'='},
-            constraints = []
-        )
-
-@app.route('/submit_m', methods=['POST', 'GET'])
-def submit_constraints():
-    """
-    <summary>
-        <args> 
-        Global variables: variables 
-        </args>
-        Añade cada el input del form de restricciones a la lista de restricciones globales
-        Retorna el mismo html para que añada mas restricciones
-    </summary>
-    """
-    global constraints
-    if request.form['submit_button'] == 'add_restriccion_m':
-        x1c = request.form["X1"]
-        x2c = request.form["X2"]
-        symbol = request.form['symbol']
-        constante = request.form['c']
-        constraints.append({ 'X1':x1c, 'X2':x2c, 'symbol':symbol, 'c':constante })
-        # c_variable1 = request.form['X1c']
-        # variable2 = request.form['X2']
-        # c_variable2 = request.form['X2c']
-        print(variables)
-        return render_template(
-            'inputs.html',
-            variables=variables
-        )
-
-def table_to_html(matrix):
-    s = "<table>"
-    for i in matrix:
-        s += "<tr>"
-        s += "<tr><td>"
-        for k in i:
-            s += "<td>" + str(k) + "</td>"
-        s += "</td>"
-        s += "</tr></tr>"
-    s += "</table>"
-    return s
-    
-
-
-@app.route('/results')
-def results():
-    """
-    <summary>
-        <args> 
-        Global variables: constraints, f_o, big_m, m1, urs 
-        </args>
-        Punto de salida del programa.
-        Retorna El resultado.
-    </summary>
-    """
-    optimal_integer, big_m, primal_str, primal_optimum, primal_result, dual_str, dual_optimum, dual_result = main()
-    optimal_int = optimal_integer[0]
-    values_optimal_int = optimal_integer[1]
-
-    return render_template(
-            'results.html', 
-            dual_str=dual_str.split('\n'), primal_str=primal_str.split('\n'),
-            primal_optimum=primal_optimum, primal_result=primal_result.split('\n'), 
-            dual_optimum=dual_optimum, dual_result=dual_result.split('\n'), 
-            big_m=big_m, optimal_int=optimal_int, values_optimal_int=values_optimal_int, 
-        )
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    print("\n"*2)
+    x,y = get_range_x_and_y(constraints)
+    print(x, y)
+    print(get_optimum(constraints, x, y, f_o))

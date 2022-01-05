@@ -185,18 +185,18 @@
   </head>
   <body>
     <div class="testbox">
-      <form action="/">
+      <form method="POST">
 
         <div class="banner">
           <h1>CALCULADORA PROGRAMACION LINEAL</h1>
         </div>
         <br>
-        <h2 style="color:#4f42bf">MODO FORMATO</h2>
+        <h2 style="color:#4f42bf">Resultado Primal</h2>
         <div class="question">
           <h3>FUNCION OBJETIVA - MAX. 2 VARIABLES</h3>
           <p>Formato: 'X1': 1, 'X2': 1</p>
           <div class="f_o_write">
-            <input type="text" name="f_o"/>
+            <input type="text" class="form" name="f_o_w" id="f_o_w"/>
           </div>
           <h3>RESTRICCIONES</h3>
           <p>Formato: {'X1': 1, 'X2': 1, 'symbol': '<=', 'c': 3}</p>
@@ -207,10 +207,11 @@
           </div>
         </div>
         <div class="btn-block">
-          <button type="submit" href="/">SUBIR</button>
+            <button type="submit" name="submit_button" value="write" method="POST" href="/submit">
+              SUBIR
+            </button>
         </div>
 
-        <!-- FORMA MANUAL -->
         <h2 style="color:#4f42bf">MODO MANUAL</h2>
         <div class="item">
           <h2>FUNCION OBJETIVO</h2>
@@ -224,14 +225,22 @@
           </div>
         </div>
         <h2>RESTRICCIONES</h2>
-        <p>Cantidad de restricciones:</p>
-        <div class="quantity_constraints_manual">
-          <input type="number" name="number of constraints" style="width: 20%"/>
-        </div>
-        <div class="btn-addconstraint">
-          <button type="submit" href="/">confirmar cantidad de restricciones</button>
-        </div>
+        {% for i in variables %}
+        <p>{{i}}</p>
+        <input name={{i}} placeholder="1" />
+        {% endfor %}
+       
+        <p>SIMBOLO</p>
+        <input name="symbol" placeholder="<=" />
+        <p>CONSTANTE</p>
+        <input name="c" placeholder="1" />
+        <button type="submit" href="/">añadir restriccion</button>
         <br>
+        <div class="btn-block">
+          
+          <button type="submit" href="/" name="submit_button" value="manual">SUBIR</button>
+         
+        </div>
         
       </form>
     </div>

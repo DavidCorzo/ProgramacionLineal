@@ -1,0 +1,17 @@
+
+Entidad empleado:
+    primary key id.
+    correo
+    trabajo
+    salario
+    comision o salario adicional.
+    puesto de trabajo foreign key a la entidad de puestos de trabajo.
+    manager (relación con la misma entidad por que manager tambien es empleado.)
+    duración 
+
+Entidad puesto de trabajo:
+    id 
+    nombre 
+    min de salario 
+    max de salario 
+

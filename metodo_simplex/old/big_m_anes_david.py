@@ -1,18 +1,8 @@
-# ANES MAATENS Y DAVID CORZO
-from logging import debug
-from flask import Flask, render_template, request
-
-from typing import OrderedDict, Tuple
+from typing import OrderedDict
 from tabulate import tabulate
 from colorama import Fore
-from ast import literal_eval
-import pandas
+
 # ANES MAATENS Y DAVID CORZO
-
-f_o, constraints, urs, m1 = {}, [], [], True
-
-X = 'X1'
-Y = 'X2'
 
 def make_inequalities_equalities(constraints:list, f_o: dict, m1:bool, big_m:int) -> None:
     """
@@ -39,9 +29,9 @@ def make_inequalities_equalities(constraints:list, f_o: dict, m1:bool, big_m:int
         '=': '='
     }
 
-    # print("\nbefore")
+    print("\nbefore")
     # for i in constraints: print(i)
-    # print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
+    print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
 
     # El siguiente convierte la constante negativa de los constraints en positivos.
     for index in range(len(constraints)):
@@ -68,9 +58,9 @@ def make_inequalities_equalities(constraints:list, f_o: dict, m1:bool, big_m:int
         index += 1
         n += 1
 
-    # print("after")
+    print("after")
     # for i in constraints: print(i)
-    # print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
+    print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
 
 def pass_everything_in_f_o_to_left(f_o:dict) -> None:
     """
@@ -139,7 +129,7 @@ def find_maximum_coeficient_of_f_o(f_o:dict) -> int:
 # 6]:
 
 
-def optimum_reached(f_o:dict, m:bool) -> Tuple[bool, float]:
+def optimum_reached(f_o:dict, m:bool) -> bool:
     """
     <summary>
         <args>
@@ -157,15 +147,15 @@ def optimum_reached(f_o:dict, m:bool) -> Tuple[bool, float]:
     if (m): # Maximización.
         if ( 0 <= min(opt) ):
             print("Optimum reached: ", min(opt), ", c = ", f_o['c'])
-            return (True, f_o['c'])
+            return True
         # print("Optimum not reached yet.", min(opt))
-        return (False, 0)
+        return False
     else: # Minimización.
         if ( max(opt) <= 0 ):
             print("Optimum reached: ", max(opt), ", c = ", f_o['c'])
-            return (True, f_o['c'])
+            return True
         # print("Optimum not reached yet.", max(opt))
-        return (False, 0)
+        return False
 
 
 # 7]:
@@ -247,7 +237,7 @@ def is_actual_variable(string):
         Ve si la llave proporcionada corresponde a una variable original.
         Retorna true si lo es, false si no lo es.
     </summary>
-    """ 
+    """
     return (string[0] == 'X')
 
 def is_slack_excess_variable(string):
@@ -348,7 +338,7 @@ def make_initial_simplex_table(simplex_table:OrderedDict, constraints: list, f_o
     # Add the c.
     simplex_table.update( {'c': []} )
     
-    # Copying the information in f_o and constraints to the simplex table:
+    # Copying the information in f_p and constraints to the simplex table:
     for k,v in simplex_table.items():
         simplex_table[k].append(f_o[k])
     for k,v in simplex_table.items():
@@ -455,7 +445,7 @@ def iteration(simplex_table, m1):
     else:
         coef_column_name = find_maximum_coeficient_of_f_o(simplex_table[0])
     # print(simplex_table[0])
-    # print(f"Choose: {coef_column_name}")
+    print(f"Choose: {coef_column_name}")
 
     for i in simplex_table:
         try: val = i['c'] / i[coef_column_name]
@@ -473,7 +463,7 @@ def iteration(simplex_table, m1):
     
     # make the rows selected column name 1
     num = simplex_table[selected_index][coef_column_name]
-    # print("Value to divide by: ",num)
+    print("Value to divide by: ",num)
     simplex_table[selected_index] =  div_row(simplex_table[selected_index], num)
     selected_row = {k:v for k,v in simplex_table[selected_index].items()}
     
@@ -671,314 +661,179 @@ def dual(f_o:dict, constraints:list,urs:list,m1:bool):
 
     return(new_f_o,new_constraints,new_urs,m2)
 
-def get_range_x_and_y(constraints:list) -> Tuple[int, int]:
-    """
-    <summary>
-        <args> 
-        constraints: la matriz de restricciones. 
-        </args>
-        Retorna el máximo x y y de que cumple con ser el max(x/c), max(y/c).
-    </summary>
-    """
-    # X1 = X, X2, Y
-    c_div_x, c_div_y = list(), list()
-    for i in constraints:
-        c = i['c']
-        x = i[X]
-        y = i[Y]
-        if x != 0:
-            c_div_x.append(c/x)
-        if y != 0:
-            c_div_y.append(c/y)
-    
-    # max_range_x = [x['c']/x[X] for x in constraints if (x[X] != 0)]
-    max_range_x = c_div_x
-    # max_range_y = [x['c']/x[Y] for x in constraints if (x[Y] != 0)]
-    max_range_y = c_div_y
 
-    # axis points.
-    # for i in range(len(constraints)):
-    #     if (constraints[i][Y] != 0):
-    #         max_range_x.append(0)
-    #         max_range_y.append(constraints[i]['c']/constraints[i][Y])
-    # for i in range(len(constraints)):
-    #     if (constraints[i][X] != 0):
-    #         max_range_x.append(constraints[i]['c']/constraints[i][X])
-    #         max_range_y.append(0)
-    
-    print(max_range_x)
-    print(max_range_y)
-
-    # symbols = [x['symbol'] for x in constraints]
-    symbols = list()
-    for i in constraints:
-        symbols.append(i['symbol'])
-    if (('=>' in symbols) or ('>=' in symbols)):
-        return (max(max_range_x), max(max_range_y))
-    else:
-        return (min(max_range_x), min(max_range_y))
-
-def get_feasable_points(max_range_x:int, max_range_y:int) -> list:
-    """
-    <summary>
-        <args> 
-        max_range_x: el valor máximo (o minimo) de la lista de coeficientes/c, 
-        max_range_y: el valor máximo (o minimo) de la lista de coeficientes/c
-        </args>
-        Retorna todos los puntos que cumplen con las restricciones y con los límites.
-    </summary>
-    """
-    max_range_x = round(max_range_x) + 1
-    max_range_y = round(max_range_y) + 1
-    for x_i in range(max_range_x):
-        for y_i in range(max_range_y):
-            yield (x_i, y_i)
-
-def evaluate_polinomial(c_0:float, c_1:float, i:tuple) -> float:
-    return c_0 * i[0] + c_1 * i[1]
-
-def get_optimum(constraints, max_range_x, max_range_y, f_o) -> Tuple[float, Tuple[int, int]]:
-    """
-    <summary>
-        <args> 
-        constraints, max_range_x, max_range_y, f_o 
-        </args>
-        Retorna el valor optimo 
-    </summary>
-    """
-    interest_pts = set()
-    for i in get_feasable_points(max_range_x, max_range_y):
-        is_in_feasable_region = True
-        for j in range(len(constraints)):
-            candidate = evaluate_polinomial(constraints[j][X], constraints[j][Y], i)
-            limit  = constraints[j]['c']
-            simbol = constraints[j]['symbol']
-            # print(candidate, limit, simbol)
-            if ( # check all viable options.
-                    ((simbol == "<=") and (candidate <= limit)) or 
-                    ((simbol == '>=') and (candidate >= limit)) or 
-                    ((simbol == '<') and (candidate < limit)) or 
-                    ((simbol == '>') and (candidate > limit)) or 
-                    ((simbol == '=') and (candidate == limit))
-                ):
-                continue
-            else: 
-                is_in_feasable_region = False
-                break
-        if (is_in_feasable_region): interest_pts.add(tuple([evaluate_polinomial(f_o[X], f_o[Y], i), i]))
-    return max(interest_pts, key=lambda x: x[0])
-
-
-
-
-def main():
-    """
-    <summary>
-        <args> 
-        None.
-        </args>
-        Punto de entrada al programa.
-    </summary>
-    """
-    # f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 9}
-    # constraints = [
-        # {'X1': 3,  'X2': 5, 'symbol': '<=', 'c':  60 }, {'X1': 4,  'X2': 4, 'symbol': '<=', 'c':  72 }, {'X1': 2,  'X2': 4, 'symbol': '<=', 'c':  100  }
-    # ] 108(0,12)
-    global f_o, constraints, m1, urs
-    print(f_o, constraints, m1, urs)
-    # m1:bool = True
-
-    urs = [0 for k,v in f_o.items() if (k[0].lower() == 'x')] 
-
-    # integers:
-    x,y = get_range_x_and_y(constraints)
-    optimal_integer = get_optimum(constraints, x, y, f_o)
-    print(optimal_integer)
-
-    # print(f"{Fore.WHITE}")
-    big_m: int = 10_000
-    # print("PRIMAL \n MAX: "+ str(m1) + "\n F_O: " + str(f_o) + "\n Constraints: " + str(constraints) + "\n URS: " + str(urs) + "\n\n")
-    # print(f"PRIMAL: {'maximizing' if m1 else 'minimizing'} {m1}")
-    # print("PRIMAL FUNCION OBJETIVO")
-    # print()
-    # print("PRIMAL CONSTRAINTS: ")
-    # print()
-    # print("URS: ", urs)
-
-    ## funcion dual
-    # print(f"{Fore.GREEN}")
-    dual_f_o, dual_constraints, dual_urs, m2 = dual(f_o.copy(), constraints.copy(), urs.copy(),m1)
-    # print("DUAL \n MAX: "+ str(m2) + "\n F_O: " + str(dual_f_o) + "\n Constraints: " + str(dual_constraints) + "\n URS: " + str(dual_urs) + "\n\n")
-    # print(f"DUAL: {'maximizing' if m2 else 'minimizing'} {m2}")
-    # print("DUAL FUNCION OBJETIVO")
-    # print()
-    # print("DUAL CONSTRAINTS: ")
-    # print()
-    # print("URS: ", )
-    primal_str = "Funcion objetivo: " + str(tabulate([[str(x).center(6) for x in f_o.values()]], [str(x).center(6) for x in f_o.keys()], tablefmt="pretty")) + "\n\nRestricciones primal: " + str(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
-    dual_str = "Funcion objetivo: " + str(tabulate([[x for x in dual_f_o.values()]], dual_f_o.keys(), tablefmt="pretty")) + "\n\nRestricciones dual: " + str(tabulate([x.values() for x in dual_constraints], [x for x in dual_constraints[0].keys()], tablefmt="pretty")) + "\n\nURS: " + str(dual_urs)
-
-    # print(f"{Fore.WHITE}PRIMAL")
-    # print("-"*100)
-    make_inequalities_equalities(constraints=constraints, f_o=f_o, m1=m1, big_m=big_m)
-    pass_everything_in_f_o_to_left(f_o)
-    simplex_table = make_initial_simplex_table(OrderedDict(), constraints, f_o, big_m, m1, urs)
-    primal_done, primal_optimum = optimum_reached(simplex_table[0], m1)
-    while not primal_done:
-        simplex_table = iteration(simplex_table, m1)
-        primal_done, primal_optimum = optimum_reached(simplex_table[0], m1)
-    # print("\n")
-    # for i in simplex_table: print(i)
-    primal_result = tabulate([x.values() for x in simplex_table], simplex_table[0].keys(), tablefmt="pretty")
-    # primal_result = [simplex_table[0].keys()] + [x.values() for x in simplex_table]
-    # print("="*200)
-
-    # DUAL
-    # print(f"{Fore.GREEN}DUAL")
-    make_inequalities_equalities(constraints=dual_constraints, f_o=dual_f_o, m1=m2, big_m=big_m)
-    pass_everything_in_f_o_to_left(dual_f_o)
-    simplex_table_dual = make_initial_simplex_table(OrderedDict(), dual_constraints, dual_f_o, big_m, m2, dual_urs)
-    dual_done, dual_optimum = optimum_reached(simplex_table_dual[0], m2)
-    while not dual_done:
-        simplex_table_dual = iteration(simplex_table_dual, m2)
-        dual_done, dual_optimum = optimum_reached(simplex_table_dual[0], m2)
-    # for i in simplex_table_dual: print(i)
-    dual_result = tabulate([x.values() for x in simplex_table_dual], simplex_table_dual[0].keys(), tablefmt="pretty")
-    # dual_result = [simplex_table_dual[0].keys()] + [x.values() for x in simplex_table_dual]
-    return optimal_integer, big_m, primal_str, primal_optimum, primal_result, dual_str, dual_optimum, dual_result
-    
-app = Flask(__name__)
+f_o, constraints, urs, m1 = None, None, None, None
+NUMERO_DE_PRUEBA = 9
+if (NUMERO_DE_PRUEBA == 1):
+    # ejercicio max clase 
+    # passa ambos con 8400
+    f_o = {'z': 1, 'symbol': '=', 'X1': 3, 'X2': 5}
+    constraints = [
+        {'X1':  25, 'X2':   50, 'symbol': '<=', 'c': 80_000}, 
+        {'X1': 0.5, 'X2': 0.25, 'symbol': '<=', 'c': 700},
+        {'X1':   1, 'X2':    0, 'symbol': '<=', 'c': 1_000}
+    ]
+    urs = [0,0]
+    m1:bool = True
+if (NUMERO_DE_PRUEBA == 2):
+    # ejemplo min libro
+    # pasa ambos con 25
+    f_o = {'z': 1, 'symbol': '=', 'X1': 2, 'X2': 3}
+    constraints = [
+        {'X1': 0.5, 'X2': 0.25, 'symbol': '<=', 'c':  4},
+        {'X1':   1, 'X2':    3, 'symbol': '>=', 'c': 20},
+        {'X1':   1, 'X2':    1, 'symbol': '=', 'c': 10}
+    ]
+    urs=[0, 0]
+    m1:bool = False
+if (NUMERO_DE_PRUEBA == 3):
+    # ejemplo max en línea
+    # pasa ambos con ~7.50
+    f_o = {'z': 1, 'symbol': '=', 'X1': 1, 'X2': 5}
+    constraints = [
+        {'X1': 3, 'X2': 4, 'symbol': '<=', 'c': 6},
+        {'X1': 1, 'X2': 3, 'symbol': '>=', 'c': 2}
+    ]
+    urs=[0, 0]
+    m1:bool = True
+if (NUMERO_DE_PRUEBA == 4):
+    # ejemplo min 2 libro
+    # pasa ambos con 1.0
+    f_o = {'z': 1, 'symbol': '=', 'X1': 4, 'X2': 4, 'X3': 1}
+    constraints = [
+        {'X1': 1, 'X2': 1, 'X3': 1, 'symbol': '<=', 'c': 2},
+        {'X1': 2, 'X2': 1, 'X3': 0, 'symbol': '<=', 'c': 3},
+        {'X1': 2, 'X2': 1, 'X3': 3, 'symbol': '>=', 'c': 3}
+    ]
+    urs=[0, 0, 0]
+    m1:bool = False
+if (NUMERO_DE_PRUEBA == 5):
+    # ejemplo min 3 libro
+    # pasa ambos con 4.0
+    f_o = {'z': 1, 'symbol': '=', 'X1': 2, 'X2': 3}
+    constraints = [
+        {'X1': 2, 'X2':  1, 'symbol': '>=', 'c':  4},
+        {'X1': 1, 'X2': -1, 'symbol': '>=', 'c': -1}
+    ]
+    urs=[0, 0]
+    m1:bool = False
+if (NUMERO_DE_PRUEBA == 6):
+    # ejemplo max 1 libro 
+    # pasa ambos con 5
+    f_o = {'z': 1, 'symbol': '=', 'X1': 3, 'X2': 1}
+    constraints = [
+        {'X1': 1, 'X2': 1, 'symbol': '>=', 'c': 3},
+        {'X1': 2, 'X2': 1, 'symbol': '<=', 'c': 4},
+        {'X1': 1, 'X2': 1, 'symbol': '=' , 'c': 3}
+    ]
+    urs=[0, 0]
+    m1:bool = True
+if (NUMERO_DE_PRUEBA == 7):
+    # ejercicio 1 prueba
+    # pasa ambos con ~3.33
+    f_o = {'z': 1, 'symbol': '=', 'X1': 2, 'X2': 3, 'X3': 0}
+    constraints = [
+        {'X1': 2, 'X2': -1, 'X3': -1, 'symbol': '>=', 'c': 3},
+        {'X1': 1, 'X2': -1, 'X3':  1, 'symbol': '>=', 'c': 2}
+    ]
+    urs=[0, 0, 0]
+    m1:bool = False
+if (NUMERO_DE_PRUEBA == 8):
+    # ejercicio 2 prueba
+    # pasa ambos con 160.
+    f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 10, 'X3': 8}
+    constraints = [
+        {'X1': 3, 'X2': 5, 'X3': 2, 'symbol': '<=', 'c':  60},
+        {'X1': 4, 'X2': 4, 'X3': 4, 'symbol': '<=', 'c':  72},
+        {'X1': 2, 'X2': 4, 'X3': 5, 'symbol': '<=', 'c': 100}
+    ]
+    urs = [0, 0, 0]
+    m1:bool = True
+if (NUMERO_DE_PRUEBA == 9):
+    # ejercicio 3 prueba
+    # pasa ambas con ~-2.4
+    f_o = {'z': 1, 'symbol': '=', 'X1': -2, 'X2': -1}
+    constraints = [
+        {'X1': -3, 'X2': -1, 'symbol': '<=', 'c': -3},
+        {'X1': -4, 'X2': -3, 'symbol': '<=', 'c': -6},
+        {'X1': -1, 'X2': -2, 'symbol': '<=', 'c': -3}
+    ]
+    urs=[0, 0]
+    m1:bool = True
+if (NUMERO_DE_PRUEBA == 10):
+    # ejercicio 4 prueba
+    # pasa ambas con 23.
+    f_o = {'z': 1, 'symbol': '=', 'X1': 5, 'X2': 3}
+    constraints = [
+        {'X1': 2, 'X2': 4, 'symbol': '<=', 'c': 12},
+        {'X1': 2, 'X2': 2, 'symbol': '=' , 'c': 10},
+        {'X1': 5, 'X2': 2, 'symbol': '>=', 'c': 10}
+    ]
+    urs=[0, 0]
+    m1:bool = False
+if (NUMERO_DE_PRUEBA == 11):
+    # ejercicio 5
+    # pasa ambos con 15.
+    f_o = {'z': 1, 'symbol': '=', 'X1': 1, 'X2': 2, 'X3': 3, 'X4': -1}
+    constraints = [
+        {'X1': 1  , 'X2': 2, 'X3': 3, 'X4': 0  , 'symbol': '='    , 'c': 15 },
+        {'X1': 2  , 'X2': 1, 'X3': 5, 'X4': 0  , 'symbol': '='    , 'c': 20 },
+        {'X1': 1  , 'X2': 2, 'X3': 1, 'X4': 1  , 'symbol': '='    , 'c': 10 }
+    ]
+    urs=[0, 0, 0, 0]
+    m1:bool = True
 
 
-@app.route('/', methods=["GET", "POST"])
-def mainpage():
-     """
-    <summary>
-        <args> 
-        None 
-        </args>
-        Retorna el html de input
-    </summary>
-    """
-     return render_template('inputs.html', f_o = {}, constraints = [])
+"""
+<summary>
+    <args> Nada </args>
+    Punto de entrada al programa.
+    Retorna Nada.
+</summary>
+"""
+print(f"{Fore.WHITE}")
+big_m: int = 10_000
+# print("PRIMAL \n MAX: "+ str(m1) + "\n F_O: " + str(f_o) + "\n Constraints: " + str(constraints) + "\n URS: " + str(urs) + "\n\n")
+print(f"PRIMAL: {'maximizing' if m1 else 'minimizing'} {m1}")
+print("PRIMAL FUNCION OBJETIVO")
+print(tabulate([[x for x in f_o.values()]], f_o.keys(), tablefmt="pretty"))
+print("PRIMAL CONSTRAINTS: ")
+print(tabulate([x.values() for x in constraints], [x for x in constraints[0].keys()], tablefmt="pretty"))
+print("URS: ", urs)
 
-@app.route('/submit', methods=['POST', 'GET'])
-def submit():
-     """
-    <summary>
-        <args> 
-        Global variables: f_o, constraints (funcion objetivo y restricciones) 
-        </args>
-        Form de input del programa. Se puede llenar los inputs de forma ya formateada, o se puede llenar los inputs de forma 'MANUAL'
-        Dependiendo del boton que se presiona:
-        - Si se presiona el primer boton de subir, asigna la informacion escrita a las variables de f_o y constraints.
-        - Si se presiona el boton de añadir variables (MANUAL), Retorna el mismo html para que añada restricciones.
-    </summary>
-    """
-     global variables, constraints, f_o
-     if request.method == 'POST':
-        ##variable only used to ask for constraints in manual version
-        if request.form['submit_button'] == 'write':
-            variables=[]
-            add_to_f_o = literal_eval('{' + request.form["f_o_w"] + '}')
-            add_to_f_o.update( {'z':1, 'symbol':'='} )
-            # print(str(add_to_f_o))
-            add_to_constraints = request.form['constraints_w'].split('},')
-            for i in range(len(add_to_constraints)):
-                if (add_to_constraints[i][-1] == '}'): continue
-                else: add_to_constraints[i] = add_to_constraints[i] + '}'
-            add_to_constraints = [literal_eval(x.strip()) for x in add_to_constraints]
-        
-        elif request.form['submit_button'] == 'add_variables_m':
-            variables=[]
-            add_to_constraints = []
-            variable1 = request.form['X1_name']
-            c_variable1 = request.form['X1coeficiente']
-            variable2 = request.form['X2_name']
-            c_variable2 = request.form['X2coeficiente']
-            add_to_f_o = {'z':1, 'symbol':'=', 'X1':float(c_variable1), 'X2': float(c_variable2)}
-            variables = [variable1,variable2]
-        constraints = add_to_constraints.copy()
-        f_o = add_to_f_o.copy()
-        return render_template(
-                'inputs.html',
-                f_o = add_to_f_o,
-                constraints = add_to_constraints,
-                variables = variables
-            )
-    
-    # if request.form['submit_button'] == 'manual':
-    #     print('manual')
-     return render_template(
-            'inputs.html',
-            f_o = {'z':1, 'symbol':'='},
-            constraints = []
-        )
+## funcion dual
+print(f"{Fore.GREEN}")
+dual_f_o, dual_constraints, dual_urs, m2 = dual(f_o.copy(), constraints.copy(), urs.copy(),m1)
+# print("DUAL \n MAX: "+ str(m2) + "\n F_O: " + str(dual_f_o) + "\n Constraints: " + str(dual_constraints) + "\n URS: " + str(dual_urs) + "\n\n")
+print(f"DUAL: {'maximizing' if m2 else 'minimizing'} {m2}")
+print("DUAL FUNCION OBJETIVO")
+print(tabulate([[x for x in dual_f_o.values()]], dual_f_o.keys(), tablefmt="pretty"))
+print("DUAL CONSTRAINTS: ")
+print(tabulate([x.values() for x in dual_constraints], [x for x in dual_constraints[0].keys()], tablefmt="pretty"))
+print("URS: ", dual_urs)
 
-@app.route('/submit_m', methods=['POST', 'GET'])
-def submit_constraints():
-    """
-    <summary>
-        <args> 
-        Global variables: variables 
-        </args>
-        Añade cada el input del form de restricciones a la lista de restricciones globales
-        Retorna el mismo html para que añada mas restricciones
-    </summary>
-    """
-    global constraints
-    if request.form['submit_button'] == 'add_restriccion_m':
-        x1c = request.form["X1"]
-        x2c = request.form["X2"]
-        symbol = request.form['symbol']
-        constante = request.form['c']
-        constraints.append({ 'X1':x1c, 'X2':x2c, 'symbol':symbol, 'c':constante })
-        # c_variable1 = request.form['X1c']
-        # variable2 = request.form['X2']
-        # c_variable2 = request.form['X2c']
-        print(variables)
-        return render_template(
-            'inputs.html',
-            variables=variables
-        )
+print(f"{Fore.WHITE}PRIMAL")
+print("-"*100)
+make_inequalities_equalities(constraints=constraints, f_o=f_o, m1=m1, big_m=big_m)
+pass_everything_in_f_o_to_left(f_o)
+simplex_table = make_initial_simplex_table(OrderedDict(), constraints, f_o, big_m, m1, urs)
+while not optimum_reached(simplex_table[0], m1):
+    simplex_table = iteration(simplex_table, m1)
+print("\n")
+# for i in simplex_table: print(i)
+print(tabulate([x.values() for x in simplex_table], simplex_table[0].keys(), tablefmt="pretty"))
+print("="*200)
 
-def table_to_html(matrix):
-    s = "<table>"
-    for i in matrix:
-        s += "<tr>"
-        s += "<tr><td>"
-        for k in i:
-            s += "<td>" + str(k) + "</td>"
-        s += "</td>"
-        s += "</tr></tr>"
-    s += "</table>"
-    return s
-    
+# DUAL
+print(f"{Fore.GREEN}DUAL")
+make_inequalities_equalities(constraints=dual_constraints, f_o=dual_f_o, m1=m2, big_m=big_m)
+pass_everything_in_f_o_to_left(dual_f_o)
+simplex_table_dual = make_initial_simplex_table(OrderedDict(), dual_constraints, dual_f_o, big_m, m2, dual_urs)
+while not optimum_reached(simplex_table_dual[0], m2):
+    simplex_table_dual = iteration(simplex_table_dual, m2)
+print("\n")
+# for i in simplex_table_dual: print(i)
+print(tabulate([x.values() for x in simplex_table_dual], simplex_table_dual[0].keys(), tablefmt="pretty"))
+print("="*200)
 
-
-@app.route('/results')
-def results():
-    """
-    <summary>
-        <args> 
-        Global variables: constraints, f_o, big_m, m1, urs 
-        </args>
-        Punto de salida del programa.
-        Retorna El resultado.
-    </summary>
-    """
-    optimal_integer, big_m, primal_str, primal_optimum, primal_result, dual_str, dual_optimum, dual_result = main()
-    optimal_int = optimal_integer[0]
-    values_optimal_int = optimal_integer[1]
-
-    return render_template(
-            'results.html', 
-            dual_str=dual_str.split('\n'), primal_str=primal_str.split('\n'),
-            primal_optimum=primal_optimum, primal_result=primal_result.split('\n'), 
-            dual_optimum=dual_optimum, dual_result=dual_result.split('\n'), 
-            big_m=big_m, optimal_int=optimal_int, values_optimal_int=values_optimal_int, 
-        )
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+print(f"{Fore.RESET}")
